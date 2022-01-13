@@ -24,7 +24,7 @@ section, summary, time, mark, audio, video {
   vertical-align: baseline; }
 
 article {
-  padding: 20;
+  padding: 1em;
   display: block;
 }
 
