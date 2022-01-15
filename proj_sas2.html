@@ -36,29 +36,29 @@
 									<div class="content">
 										<header>
 											<h2>SAS Report and Code: Job Cost for 5 Pollutants</h2>
-											<p>View a PDF report about the cost to clear different pollutants across multiple major cities, created by SAS code which follows below.</p>
+											<!-- p>View a PDF report about the cost to clear different pollutants across multiple major cities, created by SAS code which follows below.</p -->
 										</header>
+										<p>View a PDF report about the cost to clear different pollutants across multiple major cities, created by SAS code which follows below.</p>
 										<ul class="actions">
 											<li><a href="projects.html" class="button">Return to All Projects</a></li>
 										</ul>
 									</div>
 								</section>
+								<hr class="major"/>
 							
 							<!-- Content -->
-								<section>
-									<article>
-										<span class="embed center"><embed src="files/HW5_Salo_Report.pdf" ALIGN=CENTER width="700px" height="945px" /></span>
-									</article>
-								</section>
-                				<hr class="major"/>
-						
+								<div style="display:table; margin-left:auto; margin-right:auto;">
+									<span class="embed center"><embed src="files/HW5_Salo_Report.pdf" ALIGN=CENTER width="700px" height="945px" /></span>
+								</div>
+								<hr class="major"/>
+							
 							<!-- Code -->
-								<section>
+								
 									<pre><code>
 ********************************;
-* Author: Grace Salo			;
-* Date Created: 10.15.21         ;
-* Date Last Edited: 10.18.21     ;
+* Author: Grace Salo		;
+* Date Created: 10.15.21        ;
+* Date Last Edited: 10.18.21    ;
 ********************************;
 
 * libref for SAS data sets + fileref for raw data;
@@ -89,9 +89,7 @@ ods pdf file="Salo Projects Graphs.pdf" startpage=never dpi=300;
 
 
 * read in raw data (2)-(5);
-
 * (1) LeadProjects;
-
 * (2) O3Projects;
 data O3;
   infile RawData("O3Projects.txt") dsd firstobs=2 truncover;
@@ -271,7 +269,7 @@ ods pdf close;
 quit;
 
                                     					</code></pre>
-								</section>
+								<hr class="major"/>
 								
 							<!-- Footer -->
 								<footer id="footer">
