@@ -1,0 +1,334 @@
+
+<!DOCTYPE HTML>
+<!--
+	Editorial by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Grace Salo | Projects</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+
+							<!-- Header -->
+								<header id="header">
+									<a href="index.html" class="logo"><strong>Grace Salo Portfolio</strong></a>
+									<ul class="icons">
+										<li><a href="https://www.linkedin.com/in/grace-salo" class="icon brands fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+										<li><a href="https://github.com/grace-salo" class="icon brands fa-github"><span class="label">Github</span></a></li>
+										<li><a href="https://twitter.com/gracesalo13" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+									</ul>
+								</header>
+
+							<!-- Banner -->
+								<section id="banner">
+									<!-- <div class="content">
+										<header>
+											<h1>Project: SAS Code and Report</h1>
+											<p>  ...  </p>
+										</header>
+										</p> [description] </p>
+                                                                                <ul class="actions">
+											<li><a href="projects.html" class="button">Return to All Projects</a></li>
+										</ul>
+									</div> -->
+									<div class="content">
+										<header><p> [[description]] </p></header>
+										<ul class="actions">
+											<li><a href="projects.html" class="button">.Return to All Projects</a></li>
+										</ul>
+									</div>
+									<ul class="actions">
+										<li><a href="projects.html" class="button">..Return to All Projects</a></li>
+									</ul>
+								</section>
+							
+							<!-- Content -->
+								<section>
+									<header class="major">
+										<h2>Project: SAS Code and Report Me</h2>      <!-- add: h2 id="content" -->
+									</header>
+									<header class="main">
+										<h1>Project: SAS Code</h1>
+									</header>  
+									<h1 id="content">Sas code #1</h1>
+									<h2 id="content">sas code #2</h2>
+								</section>
+							
+							<!-- Content -->
+								<section>
+                                                                        <h2>~ report below ~</h2>
+                                                                        <article>
+                                                                                <a href="#"><span class="embed center"><embed src="images/files/HW4_Salo_Report.pdf" ALIGN=CENTER width="700px" height="945px" /></span></a>
+                                                                                <h3>sas report</h3>
+                                                                                <p>  ...  </p>
+                                                                        </article>
+                                                                        <hr />
+                                                                        <h2>~ report 2 below ~</h2>
+                                                                        <article>
+                                                                                <a href="#"><span class="embed center"><embed src="images/files/HW4_Salo_Report.pdf" ALIGN=CENTER width="700px" height="1200px" /></span></a>
+                                                                                <h3>sas report 2</h3>
+                                                                                <p>  ...  </p>
+                                                                        </article>
+								</section>
+                                                        
+								<hr class="major"/>
+                                                                <hr class="major"/>
+                                                                <hr class="major"/>
+                                                        
+                                                                <section>
+                                                                        <article>
+                                                                                <a href="#"><span class="embed center"><embed src="images/files/HW4_Salo.sas" ALIGN=CENTER width="700px" height="2000px" /></span></a>
+                                                                                <h3>sas code</h3>
+                                                                                <p>  ...  </p>
+                                                                        </article>
+                                                                </section>
+                                                        
+                                                                <hr class="major"/>
+                                                                <hr class="major"/>
+                                                                <hr class="major"/>
+                                                        
+                                                        <!-- Code -->
+                                                                <section>
+                                                                        <h3>code</h3>
+                                                                        <pre><code>
+******************************************;
+* Name: Grace Salo                        ;
+* Course: ST 445 001                      ;
+* Date Created: 10.6.21                   ;
+* Date Edited: 10.6.21                    ;
+* Title: HW #4                            ;
+* Intent: read in LeadProjects, fix       ;
+*         errors, and create some output  ;
+******************************************;
+
+
+* libref for SAS data sets + fileref for raw data;
+x "cd L:\st445\data";
+filename RawData ".";
+
+* libref + fileref for my output;
+x "cd S:\documents\st445\to export";
+libname HW4 ".";
+filename HW4 ".";
+
+* format search + format creation;
+options fmtsearch=(HW4);
+proc format fmtlib library=HW4;
+  value MyQtr(fuzz=0)
+      13880 - 13969 = "Jan/Feb/Mar"
+      13970 - 14060 = "Apr/May/Jun"
+      14061 - 14152 = "Jul/Aug/Sep"
+      14153 - 14244 = "Oct/Nov/Dec"
+  ;
+run;
+
+* create macro vars;
+%let Year=1998;
+%let CompOpts = outbase outcompare outdiff outnoequal noprint
+    method=absolute criterion=1E-15;
+
+* read in raw data;
+data HW4.LeadProjects(drop = _CodeType _JobID);
+  infile RawData("LeadProjects.txt") dsd firstobs=2 truncover;
+  attrib  StName label = "State Name"
+          Region length=$9
+          _JobID length=$5
+          JobID length=8
+          Date format=date9.
+          _CodeType length=$5
+          PolType length=$4 label="Pollutant Name"
+          PolCode length=$8 label="Pollutant Code"
+          Equipment format=dollar11.
+          Personnel format=dollar11.
+          JobTotal format=dollar11. 
+  ;
+  input   StName $2.
+       +1 _JobID $5.
+       +1 Date 5.
+          Region $
+          _CodeType $
+       +1 Equipment comma7.
+       +3 Personnel comma7.
+          ;
+  PolCode = substr(_CodeType, 1, 1);
+  PolType = substr(_CodeType, 2, 4);
+  JobTotal = Equipment + Personnel;
+  StName = upcase(StName);
+  JobID = input(tranwrd(tranwrd(_JobID, 'O', '0'), 'l', '1'), 5.);
+  Region = propcase(Region);
+run;
+
+* sort data by Region, then by State Name, then by JobTotal;
+proc sort data=HW4.LeadProjects out=HW4.LeadProjectsSt;
+  by Region StName descending JobTotal;
+run;
+
+
+* create pdf;
+ods pdf file = "HW4 Salo Lead Report.pdf" style=Pearl dpi=300;
+
+* remove date + set graphics width;
+options nodate;
+ods graphics on / width=6in;
+
+* PROC MEANS: 90th Percentile of Total Job Cost;
+   * sort data by Region, then by State Name, then by JobTotal;
+proc sort data=HW4.LeadProjects out=HW4.LeadProjectsSt2;
+  by Region Date;
+  format Date MyQtr.;
+run;
+
+ods noproctitle;
+title "90th Percentile of Total Job Cost By Region and Quarter";
+title2 "Data for &Year";
+proc means data=HW4.LeadProjectsSt2 p90;
+  var JobTotal;
+  class Region Date;
+  format Date MyQtr.;
+  where Region ne " ";
+run;
+title;
+
+
+* Bar Graph #1: HW4Pctile90;
+ods pdf exclude all;
+proc means data=HW4.LeadProjectsSt2 p90;
+  var JobTotal;
+  class Region Date;
+  format Date MyQtr.;
+  where Region ne " ";
+  ods output summary=HW4.P90Stats;
+run;
+ods pdf;
+
+proc sgplot data=HW4.P90Stats;
+  hbar Region / response=JobTotal_p90 group=Date groupdisplay=cluster datalabel=nobs;
+  xaxis label="90th Percentile of Total Job Cost" valuesformat=dollar8. grid;
+  keylegend / position=top down=1;
+  format Date MyQtr.;
+  where Region ne " ";
+run;
+
+
+* PROC FREQ: Frequency of Cleanup by Region and Date;
+title "Frequency of Cleanup by Region and Date";
+title2 "Data for &Year";
+proc freq data=HW4.LeadProjects;
+  tables Region*Date / nocol nopercent;
+  format Date MyQtr.;
+run;
+title;
+
+
+* Bar Graph #2: HW4RegionPct;
+ods pdf exclude all;
+proc freq data=HW4.LeadProjects;
+  tables Region*Date / nocol nopercent nofreq nocum;
+  format Date MyQtr.;
+  where Region ne " ";
+  ods output CrossTabFreqs = HW4.RegPctStats(keep = Region Date RowPercent);
+run;
+ods pdf;
+
+proc sgplot data=HW4.RegPctStats;
+  vbar Region / response=RowPercent group=Date groupdisplay=cluster;
+  styleattrs datacolors=(blue green orange red);
+  yaxis valueattrs=(size=10pt) grid gridattrs=(thickness=3pt color=gray) values=(0 to 45 by 5) valuesformat=comma4.1
+        label="Region Percentage within Pollutant" labelattrs=(size=12pt);
+  xaxis valueattrs=(size=10pt) labelattrs=(size=12pt);
+  keylegend / location=inside position=topright down=2 opaque;
+  format Date MyQtr.;
+  where Region ne " ";
+run;
+title;
+
+
+* close pdf;
+ods pdf close;
+
+
+quit;
+                                                                        </code></pre>
+                                                                </section>
+								
+							<!-- Footer -->
+								<footer id="footer">
+									<header class="major">
+										<h2>Get in touch</h2>
+										<p>Please don't hesitate to reach out with questions or comments!</p>
+									</header>
+									<ul class="contact">
+										<li class="icon solid fa-home">Raleigh, NC</li>
+										<li class="icon solid fa-phone">(980) 406-1779</li>
+										<li class="icon solid fa-envelope">gracesalo01@gmail.com</li>
+										<li class="icon brands fa-linkedin-in"><a href="https://www.linkedin.com/in/grace-salo/">LinkedIn</a></li>
+									</ul>
+									<p class="copyright">&copy; Untitled. All rights reserved. Demo Images: <a href="https://unsplash.com">Unsplash</a>. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
+								</footer> 
+							
+						</div>
+					</div>
+				
+				<!-- Sidebar -->
+					<div id="sidebar">
+						<div class="inner">
+
+							<!-- Search -->
+								<section id="search" class="alt">
+									<form method="post" action="#">
+										<input type="text" name="query" id="query" placeholder="Search" />
+									</form>
+								</section>
+
+							<!-- Menu -->
+								<nav id="menu">
+									<header class="major">
+										<h2>Contents</h2>
+									</header>
+									<ul>
+										<li><a href="index.html">Homepage</a></li>
+										<li><a href="about.html">About Me</a></li>
+										<!-- <li><a href="generic.html">Generic (delete)</a></li>
+										<li><a href="elements.html">Elements (delete)</a></li> -->
+										<li>
+											<span class="opener">Projects</span>
+											<ul>
+												<li><a href="#">project #1</a></li>
+												<li><a href="#">project #2</a></li>
+												<li><a href="#">project #3</a></li>
+												<li><a href="#">project #4</a></li>
+												<li><a href="projects.html">Browse All Projects</a></li>
+											</ul>
+										</li>
+										<!-- <li><a href="#">Certifications (?)</a></li>
+										<li><a href="#">Another section (?)</a></li> -->
+										<li><a href="contact.html">Contact Me</a></li>
+									</ul>
+								</nav>
+
+						</div>
+					</div>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
