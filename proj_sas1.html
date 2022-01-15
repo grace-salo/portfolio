@@ -35,8 +35,8 @@
 								<section id="banner">
 									<div class="content">
 										<header>
-											<h2>SAS Report + Code: ______</h2>
-											<p>View here a PDF report about _________________________________________ created by SAS code that follows it below.</p>
+											<h2>SAS Report and Code: Lead Pollution</h2>
+											<p>View a PDF report about lead pollution data in major cities, created by SAS code which follows below.</p>
 										</header>
 										<ul class="actions">
 											<li><a href="projects.html" class="button">Return to All Projects</a></li>
@@ -47,7 +47,7 @@
 							<!-- Content -->
 								<section>
 									<article>
-										<a href="#"><span class="embed center"><embed src="files/HW4_Salo_Report.pdf" ALIGN=CENTER width="700px" height="945px" /></span></a>
+										<span class="embed center"><embed src="files/HW4_Salo_Report.pdf" ALIGN=CENTER width="700px" height="945px" /></span>
 									</article>
 								</section>
                 				<hr class="major"/>
@@ -55,29 +55,24 @@
 							<!-- Code -->
 								<section>
 									<pre><code>
-******************************************;
-* Name: Grace Salo                        ;
-* Course: ST 445 001                      ;
-* Date Created: 10.6.21                   ;
-* Date Edited: 10.6.21                    ;
-* Title: HW #4                            ;
-* Intent: read in LeadProjects, fix       ;
-*         errors, and create some output  ;
-******************************************;
-
+********************************;
+* Author: Grace Salo			;
+* Date Created: 10.6.21         ;
+* Date Last Edited: 10.6.21     ;
+********************************;
 
 * libref for SAS data sets + fileref for raw data;
 x "cd L:\st445\data";
 filename RawData ".";
 
 * libref + fileref for my output;
-x "cd S:\documents\st445\to export";
-libname HW4 ".";
-filename HW4 ".";
+x "cd S:\documents\st445";
+libname mylib ".";
+filename mylib ".";
 
 * format search + format creation;
-options fmtsearch=(HW4);
-proc format fmtlib library=HW4;
+options fmtsearch=(mylib);
+proc format fmtlib library=mylib;
   value MyQtr(fuzz=0)
       13880 - 13969 = "Jan/Feb/Mar"
       13970 - 14060 = "Apr/May/Jun"
@@ -92,7 +87,7 @@ run;
     method=absolute criterion=1E-15;
 
 * read in raw data;
-data HW4.LeadProjects(drop = _CodeType _JobID);
+data mylib.LeadProjects(drop = _CodeType _JobID);
   infile RawData("LeadProjects.txt") dsd firstobs=2 truncover;
   attrib  StName label = "State Name"
           Region length=$9
@@ -123,13 +118,13 @@ data HW4.LeadProjects(drop = _CodeType _JobID);
 run;
 
 * sort data by Region, then by State Name, then by JobTotal;
-proc sort data=HW4.LeadProjects out=HW4.LeadProjectsSt;
+proc sort data=mylib.LeadProjects out=mylib.LeadProjectsSt;
   by Region StName descending JobTotal;
 run;
 
 
 * create pdf;
-ods pdf file = "HW4 Salo Lead Report.pdf" style=Pearl dpi=300;
+ods pdf file = "Salo Lead Report.pdf" style=Pearl dpi=300;
 
 * remove date + set graphics width;
 options nodate;
@@ -137,7 +132,7 @@ ods graphics on / width=6in;
 
 * PROC MEANS: 90th Percentile of Total Job Cost;
    * sort data by Region, then by State Name, then by JobTotal;
-proc sort data=HW4.LeadProjects out=HW4.LeadProjectsSt2;
+proc sort data=mylib.LeadProjects out=mylib.LeadProjectsSt2;
   by Region Date;
   format Date MyQtr.;
 run;
@@ -145,7 +140,7 @@ run;
 ods noproctitle;
 title "90th Percentile of Total Job Cost By Region and Quarter";
 title2 "Data for &Year";
-proc means data=HW4.LeadProjectsSt2 p90;
+proc means data=mylib.LeadProjectsSt2 p90;
   var JobTotal;
   class Region Date;
   format Date MyQtr.;
@@ -154,18 +149,18 @@ run;
 title;
 
 
-* Bar Graph #1: HW4Pctile90;
+* Bar Graph #1: Pctile90;
 ods pdf exclude all;
-proc means data=HW4.LeadProjectsSt2 p90;
+proc means data=mylib.LeadProjectsSt2 p90;
   var JobTotal;
   class Region Date;
   format Date MyQtr.;
   where Region ne " ";
-  ods output summary=HW4.P90Stats;
+  ods output summary=mylib.P90Stats;
 run;
 ods pdf;
 
-proc sgplot data=HW4.P90Stats;
+proc sgplot data=mylib.P90Stats;
   hbar Region / response=JobTotal_p90 group=Date groupdisplay=cluster datalabel=nobs;
   xaxis label="90th Percentile of Total Job Cost" valuesformat=dollar8. grid;
   keylegend / position=top down=1;
@@ -177,24 +172,24 @@ run;
 * PROC FREQ: Frequency of Cleanup by Region and Date;
 title "Frequency of Cleanup by Region and Date";
 title2 "Data for &Year";
-proc freq data=HW4.LeadProjects;
+proc freq data=mylib.LeadProjects;
   tables Region*Date / nocol nopercent;
   format Date MyQtr.;
 run;
 title;
 
 
-* Bar Graph #2: HW4RegionPct;
+* Bar Graph #2: RegionPct;
 ods pdf exclude all;
-proc freq data=HW4.LeadProjects;
+proc freq data=mylib.LeadProjects;
   tables Region*Date / nocol nopercent nofreq nocum;
   format Date MyQtr.;
   where Region ne " ";
-  ods output CrossTabFreqs = HW4.RegPctStats(keep = Region Date RowPercent);
+  ods output CrossTabFreqs = mylib.RegPctStats(keep = Region Date RowPercent);
 run;
 ods pdf;
 
-proc sgplot data=HW4.RegPctStats;
+proc sgplot data=mylib.RegPctStats;
   vbar Region / response=RowPercent group=Date groupdisplay=cluster;
   styleattrs datacolors=(blue green orange red);
   yaxis valueattrs=(size=10pt) grid gridattrs=(thickness=3pt color=gray) values=(0 to 45 by 5) valuesformat=comma4.1
