@@ -1,0 +1,343 @@
+
+<!DOCTYPE HTML>
+<!--
+	Editorial by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Grace Salo | Projects</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+
+							<!-- Header -->
+								<header id="header">
+									<a href="index.html" class="logo"><strong>Grace Salo Portfolio</strong></a>
+									<ul class="icons">
+										<li><a href="https://www.linkedin.com/in/grace-salo" class="icon brands fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+										<li><a href="https://github.com/grace-salo" class="icon brands fa-github"><span class="label">Github</span></a></li>
+										<li><a href="https://twitter.com/gracesalo13" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+									</ul>
+								</header>
+
+							<!-- Banner -->
+								<section id="banner">
+									<div class="content">
+										<header>
+											<h2>SAS Report and Code: Genre and Movie Ratings by Studio</h2>
+											<!-- p> [alternate description placement] </p -->
+										</header>
+										<p>View a PDF report displaying the relationship between genre and movie ratings by studio, created by SAS code which follows below.</p>
+										<ul class="actions">
+											<li><a href="projects.html" class="button">Return to All Projects</a></li>
+										</ul>
+									</div>
+								</section>
+								<hr class="major"/> 
+							
+							<!-- Content -->
+								<div style="display:table; margin-left:auto; margin-right:auto;">
+									<span class="embed center"><embed src="files/HW1_Salo_Report.pdf" ALIGN=CENTER width="700px" height="945px" /></span>
+								</div>
+								<hr class="major"/>
+
+							<!-- Code -->
+								<pre><code>
+********************************;
+* Author: Grace Salo		    ;
+* Date Created: 1.10.22         ;
+* Date Last Edited: 1.18.21     ;
+********************************;
+
+* Set libraries;
+x "cd L:\st446";
+filename rawData "data";
+x "cd S:\Documents\st446";
+libname HW1 ".";
+
+* set options;
+%let CompOpts = outbase outcompare outdiff outnoequal noprint method=absolute criterion=1E-10;
+ods _all_ close;
+
+
+* Read in Movies.dat;
+	* remove Studios with Weinstein in the name;
+data HW1.HW1SaloMovies (drop=_score _genreTheme _studio);
+	infile rawdata("Movies.dat") dlm="\" firstobs=9;
+	attrib Title 		length=$68 	label="Movie Title"
+		   Studio 		length=$25  label="Lead Studio Name"
+		   Rotten 				 	label="Rotten Tomatoes Score"
+		   Audience 				label="Audience Score"
+		   ScoreDiff				label="Score Difference (Rotten - Audience)"
+		   Theme 		length=$18 	label="Movie Theme"
+		   Genre 		length=$9 	label="Movie Genre"
+		   _genreTheme  length=$50
+		   _studio      length=$250;
+	input #4 _studio @;
+		if(index(_studio, "Weinstein") = 0) then do;
+				input #1 title $
+					  #2 _score $
+			          #3 _genreTheme $ @;
+				Studio = compbl(_studio);
+				Rotten = input(scan(_score, 1, "-"), 3.);
+				Audience = input(scan(_score, 2, "-"), 3.);
+				ScoreDiff = Rotten - Audience;
+				Genre = scan(_genreTheme, 1, "-");
+				Theme = scan(_genreTheme, 2, "-");
+				output;
+			end;
+		else;
+run;
+
+
+* MEANS: calculate rotten + audience stats;
+proc means data=HW1.HW1SaloMovies nonobs mean median min std qrange max; *maxdec=2;
+	var Rotten Audience;
+	class Studio;
+	ods output summary=HW1.Stats; *(drop=V: Label_:);
+run;
+
+* SORT: sort HW1SaloMovies by Studio;
+proc sort data=HW1.HW1SaloMovies out=HW1.HW1SaloMoviesSt;
+	by Studio;
+run;
+
+* FREQ: create Genre table;
+proc freq data=HW1.HW1SaloMoviesSt;
+	table Genre / nopercent nocum;
+	by Studio;
+	ods output OneWayFreqs=HW1.Freqs(drop=Table F_Genre);
+run;
+
+* TRANSPOSE: transpose Genre Freqs by Studio;
+proc transpose data=HW1.Freqs out=HW1.FreqsTr(drop=_NAME_);
+	by Studio;
+	var Frequency;
+	id Genre;
+run;
+
+* DATA: match-merge Stats and FreqsTr by Studio;
+data HW1.production1(drop=Rotten_: Audience_: row)
+	 HW1.production2(drop=Rotten_StdDev Rotten_Median Rotten_QRange Rotten_Min Rotten_Max Aud: row);
+	attrib Rotten_Mean				label="Mean"
+		   rowHeader 	length=$12 	label="Score Statistics"
+		   str1 		length=$12 	label="Rotten Tomatoes Scores"
+		   str2 		length=$12 	label="Audience Scores";
+	merge HW1.Stats HW1.FreqsTr;
+	by Studio;
+	array statR[6] Rotten_:;
+	array statA[6] Audience_:;
+	do row=1 to 3;
+		if(row=1) then do;
+			rowHeader = "Mean (Std)";
+			if(missing(statR[row+3])) then str1 = cat(put(statR[row], 4.1), " (N/A)");
+			else str1 = cat(put(statR[row], 4.1), " (", put(statR[row+3], 5.2), ")");
+			if(missing(statA[row+3])) then str2 = cat(put(statA[row], 4.1), " (N/A)");
+			else str2 = cat(put(statA[row], 4.1), " (", put(statA[row+3], 5.2), ")");
+		end;
+		else if(row=2) then do;
+			rowHeader = "Median (IQR)";
+			str1 = cat(put(statR[row], 4.2), " (", put(statR[row+3], 5.2), ")");
+			str2 = cat(put(statA[row], 4.2), " (", put(statA[row+3], 5.2), ")");
+		end;
+		else if(row=3) then do;
+			rowHeader = "(Min, Max)";
+			str1 = cat("(", put(statR[row], 2.0), ", ", put(statR[row+3], 2.0), ")");
+			str2 = cat("(", put(statA[row], 2.0), ", ", put(statA[row+3], 2.0), ")");
+		end;
+		if(missing(Action)) then Action=0;
+		if(missing(Animation)) then Animation=0;
+		if(missing(Comedy)) then Comedy=0;
+		if(missing(Drama)) then Drama=0;
+		if(missing(Romance)) then Romance=0;
+		if(missing(Thriller)) then Thriller=0;
+		if(missing(Horror)) then Horror=0;
+		if(missing(Fantasy)) then Fantasy=0;
+		if(missing(Adventure)) then Adventure=0;
+
+		output;
+	end;
+run;
+
+* MEANS: create median ScoreDiff;
+proc means data=HW1.HW1SaloMovies nonobs;
+	var ScoreDiff;
+	class Genre;
+	ways 1;
+	output out=HW1.scoreDif(drop=_TYPE_ _FREQ_) median=;
+run;
+
+
+
+* create pdf file + options;
+ods pdf file="Salo Movie Report.pdf" startpage=never dpi=300;
+ods graphics / reset width = 9in heigh = 7.5in;
+options nodate orientation=landscape;
+
+* FORMAT: genrecol;
+proc format;
+	value genrecol(fuzz=0)
+		0 = 'cxCFF4D0'
+		1 = 'cxA9E1AB'
+		2 = 'cx66CDAA'
+		3 = 'cx7CB8E4'
+		4-high = 'cx4682B4'
+	;
+run;
+
+
+* PROC REPORT: Trafficlighting by Genre;
+title 'Genre and Movie Ratings by Studio';
+title2 'Trafficlighting based on Genre';
+footnote j=l h=10pt 'The Adventure genre was excluded as it only applied to one movie';
+footnote2 j=l h=10pt "Harvey Weinstein's company was excluded";
+proc report data=HW1.production1 style(column)=[just=c];
+	columns Studio rowHeader str1 str2 Action Animation Comedy Drama Fantasy Horror Romance Thriller;
+	define Studio / order style(column)=[cellwidth=1.6in just=l];
+	define rowHeader / display style(column)=[cellwidth=0.8in];
+	define str1 / display style(column)=[cellwidth=0.8in];
+	define str2 / display style(column)=[cellwidth=0.8in];
+	define Action / analysis style(column) = [backgroundcolor=genrecol.];
+	define Animation / analysis style(column) = [backgroundcolor=genrecol.];
+	define Comedy / analysis style(column) = [backgroundcolor=genrecol.];
+	define Drama / analysis style(column) = [backgroundcolor=genrecol.];
+	define Fantasy / analysis style(column) = [backgroundcolor=genrecol.];
+	define Horror / analysis style(column) = [backgroundcolor=genrecol.];
+	define Romance / analysis style(column) = [backgroundcolor=genrecol.];
+	define Thriller / analysis style(column) = [backgroundcolor=genrecol.];
+run;
+
+
+* PROC REPORT: Trafficlighting by Genre + Rotten Score;
+title 'Genre and Movie Ratings by Studio';
+title2 'Trafficlighting based on Genre and Average Rotten Tomatoes Score';
+footnote j=l h=10pt 'The Adventure genre was excluded as it only applied to one movie';
+footnote2 j=l h=10pt "Harvey Weinstein's company was excluded";
+footnote3 j=l h=10pt 'Studio Color Key: Below 60 (Darkest), 60-70, 70-80, 80-90, 90-100 (Lightest)';
+footnote4 j=l h=10pt 'Studio names were colored based on mean Rotten Tomatoes score using intervals that excluded the right endpoint';
+proc report data=HW1.production2 style(column)=[just=c];
+	columns Studio rowHeader str1 str2 ('Frequency by Genre' Action Animation Comedy Drama Fantasy Horror Romance Thriller) Rotten_Mean trash;
+	define Studio / order style(column)=[cellwidth=1.6in just=l];
+	define rowHeader / display style(column)=[cellwidth=0.8in];
+	define str1 / display style(column)=[cellwidth=0.8in];
+	define str2 / display style(column)=[cellwidth=0.8in];
+	define Action / analysis style(column) = [backgroundcolor=genrecol.];
+	define Animation / analysis style(column) = [backgroundcolor=genrecol.];
+	define Comedy / analysis style(column) = [backgroundcolor=genrecol.];
+	define Drama / analysis style(column) = [backgroundcolor=genrecol.];
+	define Fantasy / analysis style(column) = [backgroundcolor=genrecol.];
+	define Horror / analysis style(column) = [backgroundcolor=genrecol.];
+	define Romance / analysis style(column) = [backgroundcolor=genrecol.];
+	define Thriller / analysis style(column) = [backgroundcolor=genrecol.];
+	define Rotten_Mean / display noprint;
+	define trash / computed noprint;
+	compute trash;
+		if(Rotten_Mean < 60) then call define('Studio', 'style', 'style=[backgroundcolor=cxE74C3C]');
+		else if(60 <= Rotten_Mean < 70) then call define('Studio', 'style', 'style=[backgroundcolor=cxFF7F50]');
+		else if(70 <= Rotten_Mean < 80) then call define('Studio', 'style', 'style=[backgroundcolor=cxF4A460]');
+		else if(80 <= Rotten_Mean < 90) then call define('Studio', 'style', 'style=[backgroundcolor=cxFFDEAD]');
+		else if(90 <= Rotten_Mean) then call define('Studio', 'style', 'style=[backgroundcolor=cxFDF5E6]');
+
+	endcomp;
+run;
+title;
+footnote;
+
+
+* SGPLOT: barchart of ScoreDiff by Genre;
+proc sgplot data=HW1.scoreDif;
+	attrib ScoreDiff label="Median Score Difference (Rotten - Audience)" format=5.1;
+	vbar genre / response=ScoreDiff fillattrs=(color=cx62CCC1) nooutline 
+				 datalabel datalabelattrs=(size=12pt weight=bold style=italic);
+	yaxis labelattrs=(size=16pt) valueattrs=(size=12pt) values=(-16 to 12 by 4);
+	xaxis labelattrs=(size=16pt) valueattrs=(size=12pt);
+run;
+
+
+* close pdf + open listing;
+ods pdf close;
+ods listing;
+
+quit;
+								</code></pre>
+								
+							<!-- Footer -->
+								<footer id="footer">
+									<header class="major">
+										<h2>Get in touch</h2>
+										<p>Please don't hesitate to reach out with questions or comments!</p>
+									</header>
+									<ul class="contact">
+										<li class="icon solid fa-home">Raleigh, NC</li>
+										<li class="icon solid fa-phone">(980) 406-1779</li>
+										<li class="icon solid fa-envelope">gracesalo01@gmail.com</li>
+										<li class="icon brands fa-linkedin-in"><a href="https://www.linkedin.com/in/grace-salo/">LinkedIn</a></li>
+									</ul>
+									<p class="copyright">&copy; Untitled. All rights reserved. Demo Images: <a href="https://unsplash.com">Unsplash</a>. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
+								</footer> 
+							
+						</div>
+					</div>
+				
+				<!-- Sidebar -->
+					<div id="sidebar">
+						<div class="inner">
+
+							<!-- Search -->
+								<section id="search" class="alt">
+									<form method="post" action="#">
+										<input type="text" name="query" id="query" placeholder="Search" />
+									</form>
+								</section>
+
+							<!-- Menu -->
+								<nav id="menu">
+									<header class="major">
+										<h2>Contents</h2>
+									</header>
+									<ul>
+										<li><a href="index.html">Homepage</a></li>
+										<li><a href="about.html">About Me</a></li>
+										<!-- <li><a href="generic.html">Generic (delete)</a></li>
+										<li><a href="elements.html">Elements (delete)</a></li> -->
+										<li>
+											<span class="opener">Projects</span>
+											<ul>
+												<li><a href="#">project #1</a></li>
+												<li><a href="#">project #2</a></li>
+												<li><a href="#">project #3</a></li>
+												<li><a href="#">project #4</a></li>
+												<li><a href="projects.html">Browse All Projects</a></li>
+											</ul>
+										</li>
+										<!-- <li><a href="#">Certifications (?)</a></li>
+										<li><a href="#">Another section (?)</a></li> -->
+										<li><a href="contact.html">Contact Me</a></li>
+									</ul>
+								</nav>
+
+						</div>
+					</div>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
