@@ -227,7 +227,8 @@ footnote2 j=l h=10pt "Harvey Weinstein's company was excluded";
 footnote3 j=l h=10pt 'Studio Color Key: Below 60 (Darkest), 60-70, 70-80, 80-90, 90-100 (Lightest)';
 footnote4 j=l h=10pt 'Studio names were colored based on mean Rotten Tomatoes score using intervals that excluded the right endpoint';
 proc report data=HW1.production2 style(column)=[just=c];
-	columns Studio rowHeader str1 str2 ('Frequency by Genre' Action Animation Comedy Drama Fantasy Horror Romance Thriller) Rotten_Mean trash;
+	columns Studio rowHeader str1 str2 ('Frequency by Genre' Action Animation Comedy Drama 
+					    Fantasy Horror Romance Thriller) Rotten_Mean trash;
 	define Studio / order style(column)=[cellwidth=1.6in just=l];
 	define rowHeader / display style(column)=[cellwidth=0.8in];
 	define str1 / display style(column)=[cellwidth=0.8in];
